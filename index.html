@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smooth Image Scroll</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden; /* ซ่อน scrollbar ปกติ */
+        }
+
+        /* Container หลักที่ใช้ควบคุมการเลื่อน */
+        .main-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            scroll-snap-type: x mandatory;
+        }
+
+        /* ส่วนควบคุมการเลื่อนแนวตั้งด้านใน */
+        .vertical-container {
+            display: flex;
+            flex-direction: column;
+            width: 100vw;
+            height: 100vh;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        /* ตกแต่ง Slide แต่ละหน้า */
+        .slide {
+            min-width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            scroll-snap-align: start;
+        }
+
+        img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* ลบแถบ scrollbar เพื่อความสวยงาม (สำหรับ Chrome, Safari, Edge) */
+        .main-container::-webkit-scrollbar, 
+        .vertical-container::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <div class="slide">
+            <img src="image1.png" alt="Step 1">
+        </div>
+
+        <div class="vertical-container">
+            <div class="slide">
+                <img src="image2.png" alt="Step 2">
+            </div>
+            <div class="slide">
+                <img src="image3.png" alt="Step 3">
+            </div>
+            <div class="slide">
+                <img src="gif1.gif" alt="Final Gift">
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
