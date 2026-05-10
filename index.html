@@ -3,45 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Safe Trip - Envelope</title>
+    <title>Smooth Pattern Navigation</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-        
         body, html {
             margin: 0;
             padding: 0;
-            background-color: #000;
-            width: 100%;
             height: 100%;
-            overflow: hidden; /* ป้องกันการเลื่อนแบบสะดุด */
+            overflow: hidden;
+            background-color: #000;
         }
 
-        /* Container หลัก */
-        .wrapper {
-            display: flex;
-            width: 200vw; /* กว้าง 2 หน้าจอสำหรับ Image1 -> Image2 */
-            height: 100vh;
-            transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
-        }
-
-        /* หน้าสำหรับเก็บ Image 2, 3 และ GIF เพื่อเลื่อนขึ้น */
-        .vertical-stack {
-            display: flex;
-            flex-direction: column;
+        .container {
+            position: relative;
             width: 100vw;
-            height: 300vh; /* สูง 3 หน้าจอสำหรับ Image2, Image3, Gif1 */
-            transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+            height: 100vh;
         }
 
         .slide {
-            width: 100vw;
-            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-shrink: 0;
+            /* ซ่อนภาพเริ่มต้น */
+            clip-path: inset(0 0 0 0); 
+            z-index: 1;
+            transition: clip-path 0.8s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+
+        /* จัดลำดับ Layer */
+        .slide-1 { z-index: 4; }
+        .slide-2 { z-index: 3; }
+        .slide-3 { z-index: 2; }
+        .slide-4 { z-index: 1; }
+
+        /* สถานะเมื่อถูกซ่อน (เลื่อนออก) */
+        /* รูป 1 เลื่อนออกไปทางซ้าย */
+        .slide-1.hidden {
+            clip-path: inset(0 100% 0 0);
+        }
+        /* รูป 2 เลื่อนออกขึ้นข้างบน */
+        .slide-2.hidden {
+            clip-path: inset(0 0 100% 0);
+        }
+        /* รูป 3 เลื่อนออกขึ้นข้างบน */
+        .slide-3.hidden {
+            clip-path: inset(0 0 100% 0);
         }
 
         img {
@@ -49,110 +59,103 @@
             max-height: 90%;
             object-fit: contain;
             user-select: none;
-            -webkit-user-drag: none;
         }
 
-        /* ตกแต่งเพิ่มเติม */
         .hint {
             position: fixed;
             bottom: 20px;
             width: 100%;
             text-align: center;
-            color: #555;
+            color: #333;
             font-family: sans-serif;
-            font-size: 14px;
+            z-index: 100;
             pointer-events: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="wrapper" id="mainWrapper">
-        <div class="slide">
-            <img src="Image1.PNG" alt="From Axe">
+    <div class="container">
+        <div class="slide slide-1" id="s1">
+            <img src="Image1.PNG">
         </div>
 
-        <div class="vertical-stack" id="vStack">
-            <div class="slide">
-                <img src="Image2.PNG" alt="Open">
-            </div>
-            <div class="slide">
-                <img src="Image3.PNG" alt="Pull me">
-            </div>
-            <div class="slide">
-                <img src="Gif1.GIF" alt="Safe Trip">
-            </div>
+        <div class="slide slide-2" id="s2">
+            <img src="Image2.PNG">
+        </div>
+
+        <div class="slide slide-3" id="s3">
+            <img src="Image3.PNG">
+        </div>
+
+        <div class="slide slide-4">
+            <img src="Gif1.GIF">
         </div>
     </div>
 
-    <div class="hint">เลื่อนหน้าจอเพื่อไปต่อ</div>
+    <div class="hint" id="hintText">ปัดซ้าย เพื่อเริ่ม</div>
 
     <script>
-        let currentStep = 0; // 0: Image1, 1: Image2, 2: Image3, 3: Gif1
-        const mainWrapper = document.getElementById('mainWrapper');
-        const vStack = document.getElementById('vStack');
-        let isMoving = false;
+        let step = 1;
+        const totalSteps = 4;
+        let isWaiting = false;
 
-        function navigate(direction) {
-            if (isMoving) return;
-            
-            // เลื่อนไปข้างหน้า
-            if (direction > 0 && currentStep < 3) {
-                currentStep++;
+        function handleNavigate(direction) {
+            if (isWaiting) return;
+
+            // เลื่อนไปข้างหน้า (Scroll Down / Swipe Up / Swipe Left)
+            if (direction > 0 && step < totalSteps) {
+                const currentSlide = document.getElementById(`s${step}`);
+                if (currentSlide) {
+                    currentSlide.classList.add('hidden');
+                    step++;
+                    updateHint();
+                }
             } 
             // เลื่อนย้อนกลับ
-            else if (direction < 0 && currentStep > 0) {
-                currentStep--;
-            } else {
-                return;
+            else if (direction < 0 && step > 1) {
+                step--;
+                const prevSlide = document.getElementById(`s${step}`);
+                if (prevSlide) {
+                    prevSlide.classList.remove('hidden');
+                    updateHint();
+                }
             }
 
-            isMoving = true;
-            updatePosition();
-            
-            setTimeout(() => {
-                isMoving = false;
-            }, 600); // รอให้ Animation จบ
+            isWaiting = true;
+            setTimeout(() => isWaiting = false, 850);
         }
 
-        function updatePosition() {
-            if (currentStep === 0) {
-                mainWrapper.style.transform = `translateX(0)`;
-                vStack.style.transform = `translateY(0)`;
-            } else {
-                // เลื่อนไปทางซ้ายเพื่อโชว์ชุดแนวตั้ง
-                mainWrapper.style.transform = `translateX(-100vw)`;
-                // เลื่อนแนวตั้งตามลำดับ (1=Image2, 2=Image3, 3=Gif1)
-                const vOffset = (currentStep - 1) * 100;
-                vStack.style.transform = `translateY(-${vOffset}vh)`;
-            }
+        function updateHint() {
+            const hint = document.getElementById('hintText');
+            if (step === 1) hint.innerText = "ปัดซ้าย เพื่อเปิด";
+            else if (step < totalSteps) hint.innerText = "ปัดขึ้น เพื่อไปต่อ";
+            else hint.innerText = "Safe Trip! :)";
         }
 
-        // รองรับการใช้ Mouse Wheel / Touchpad
+        // รองรับเมาส์
         window.addEventListener('wheel', (e) => {
-            navigate(e.deltaY || e.deltaX);
+            handleNavigate(e.deltaY);
         });
 
-        // รองรับการปัดหน้าจอมือถือ
-        let touchStartY = 0;
-        let touchStartX = 0;
-
-        window.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].clientY;
-            touchStartX = e.touches[0].clientX;
+        // รองรับสัมผัส
+        let startX, startY;
+        window.addEventListener('touchstart', e => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
         });
 
-        window.addEventListener('touchend', (e) => {
-            const touchEndY = e.changedTouches[0].clientY;
-            const touchEndX = e.changedTouches[0].clientX;
-            const diffY = touchStartY - touchEndY;
-            const diffX = touchStartX - touchEndX;
+        window.addEventListener('touchend', e => {
+            let diffX = startX - e.changedTouches[0].clientX;
+            let diffY = startY - e.changedTouches[0].clientY;
 
-            // ถ้าปัดแนวนอน (หน้าแรกไปหน้าสอง) หรือปัดแนวตั้ง
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                navigate(diffX);
-            } else {
-                navigate(diffY);
+            // ถ้าอยู่หน้าแรก ใช้การปัดแนวนอน (ซ้าย)
+            if (step === 1) {
+                if (Math.abs(diffX) > 50) handleNavigate(diffX);
+            } 
+            // หน้าอื่นๆ ใช้การปัดแนวตั้ง (ขึ้น)
+            else {
+                if (Math.abs(diffY) > 50) handleNavigate(diffY);
             }
         });
     </script>
